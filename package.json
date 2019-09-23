@@ -1,0 +1,26 @@
+{
+  "name": "food-recipes-rest-api",
+  "version": "1.0.0",
+  "description": "An Rest API application for sharing food recipes",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DejanBanjac/food-recipes-rest-api.git"
+  },
+  "keywords": [
+    "Node.js",
+    "Rest",
+    "API",
+    "Mongoose"
+  ],
+  "author": "Dejan Banjac",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DejanBanjac/food-recipes-rest-api/issues"
+  },
+  "homepage": "https://github.com/DejanBanjac/food-recipes-rest-api#readme"
+}
