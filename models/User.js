@@ -40,15 +40,17 @@ const userSchema = new Schema({
 });
 
 userSchema.methods.addRecipeToFavorites = function(recipeId) {
-    const recipeIndex = this.recipes.findIndex(
-        recipe => recipe.recipeId.toString() === recipeId.toString()
-    );
-
-    if(recipeIndex >= 0){
-        return;
+    if(this.recipes.length != 0){
+        const recipeIndex = this.recipes.findIndex(
+            recipe => recipe.recipeId.toString() === recipeId.toString()
+        );
+    
+        if(recipeIndex >= 0){
+            throw new Error('This recipe is already in favourites!');
+        }
     }
 
-    this.recipes.push(recipeId);
+    this.recipes.push({recipeId: recipeId});
     
     return this.save();
 };
