@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const ObjectId = require('mongodb').ObjectID;
 
-const User = require('../models/User');
+const User = require('../models/user');
 
 const HASH_ROUNDS = 12;
 const LOGIN_FAIL_MESSAGE = "Wrong password or user name";
