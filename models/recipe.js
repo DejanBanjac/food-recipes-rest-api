@@ -28,13 +28,11 @@ const recipeSchema = new Schema({
         ref: 'Category',
         required: true
     },
-    image: String,
-    video: String,
-    userId: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    }
+    image: {
+        url: String,
+        public_id: String
+    },
+    video: String
 });
 
 module.exports = mongoose.model('Recipe', recipeSchema);

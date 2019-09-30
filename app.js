@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const userRoutes = require('./routes/user');
 const categoryRoutes = require('./routes/category');
+const recipeRoutes = require('./routes/recipe');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use((req, res, next) => {
 
 app.use('/user', userRoutes);
 app.use('/category', categoryRoutes);
+app.use('/recipe', recipeRoutes);
 
 app.use((error, req, res, next) => {
     console.log(error);
