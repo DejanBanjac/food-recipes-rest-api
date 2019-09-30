@@ -4,7 +4,10 @@ const { body } = require('express-validator/check');
 const categoryController = require('../controllers/category');
 const parser = require('../middleware/image-upload');
 
+const category = require('../models/category');
+
 const router = express.Router();
+
 const MIN_CATEGORY_NAME_LENGHT = 3;
 
 router.post(
@@ -12,10 +15,18 @@ router.post(
     parser.single('image'),
     [
         body('name')
-        .isString()
-        .trim()
-        .isLength({ min: MIN_CATEGORY_NAME_LENGHT })
-        .withMessage('Name must be at least', MIN_CATEGORY_NAME_LENGHT, ' characters long.')
+            .isString()
+            .trim()
+            .isLength({ min: MIN_CATEGORY_NAME_LENGHT })
+            .withMessage('Name must be at least', MIN_CATEGORY_NAME_LENGHT, ' characters long.')
+            .custom((value, { req }) => {
+                return category.findOne({ name: value })
+                    .then(foundRecipe => {
+                        if (foundRecipe) {
+                            return Promise.reject('Category with the same name already exists!');
+                        }
+                });
+            }),
     ],
     categoryController.addCategory
 );
@@ -25,10 +36,18 @@ router.put(
     parser.single('image'),
     [
         body('name')
-        .isString()
-        .trim()
-        .isLength({ min: MIN_CATEGORY_NAME_LENGHT })
-        .withMessage('Name must be at least', MIN_CATEGORY_NAME_LENGHT, ' characters long.')
+            .isString()
+            .trim()
+            .isLength({ min: MIN_CATEGORY_NAME_LENGHT })
+            .withMessage('Name must be at least', MIN_CATEGORY_NAME_LENGHT, ' characters long.')
+            .custom((value, { req }) => {
+                return category.findOne({ name: value })
+                    .then(foundRecipe => {
+                        if (foundRecipe) {
+                            return Promise.reject('Category with the same name already exists!');
+                        }
+                });
+            }),
     ],
     categoryController.editCategory
 );

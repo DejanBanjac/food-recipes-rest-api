@@ -1,7 +1,6 @@
 const { validationResult } = require('express-validator/check');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const ObjectId = require('mongodb').ObjectID;
 
 const User = require('../models/user');
 
@@ -82,8 +81,9 @@ exports.login = (req, res, next) => {
 
 exports.addFavouriteRecipe = (req, res, next) => {
     const recipeId = req.params.recipeId;
+    const userId = req.userId
 
-    User.findOne({ _id: new ObjectId(req.userId) })
+    User.findById(userId)
         .then( user => {
             if(!user){
                 throw new error("Server is bussy at the moment. Please try again later.");

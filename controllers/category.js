@@ -1,38 +1,55 @@
 const { validationResult } = require('express-validator/check');
 const cloudinary = require('cloudinary').v2;
 
-const Recipe = require('../models/recipe');
-const Category = require('../models/category');
+const recipe = require('../models/recipe');
+const category = require('../models/category');
+
+const DEFAULT_CATEGORY_NAME = 'Uncategorized';
 
 exports.addCategory = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        cloudinary.uploader.destroy(req.file.public_id).
-            then( result => {
-                const error = new Error('Validation failed, entered data is incorrect.');
-                error.statusCode = 422;
-                next(error);
-            })
+        const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
+        error.statusCode = 422;
+        
+        if(req.file){
+            cloudinary.uploader.destroy(req.file.public_id).
+                then( result => {
+                    next(error);
+                });
+        }
+        else{
+            next(error);
+        }
     }
     else{
         const name = req.body.name;
     
-        const image = {
-            url: req.file.url,
-            public_id: req.file.public_id
-        };
+        let newCategory;
+
+        if(req.file){
+            const image = {
+                url: req.file.url,
+                public_id: req.file.public_id
+            };
+        
+            newCategory = new category({
+                name: name,
+                image: image
+            });
+        }
+        else{
+            newCategory = new category({
+                name: name
+            });
+        }
     
-        const category = new Category({
-            name: name,
-            image: image
-        });
-    
-        category
+        newCategory
             .save()
             .then(result => {
                 res.status(201).json({
                     message: 'Category created successfully!',
-                    category: category
+                    category: newCategory
                 });
             })
             .catch(err => {
@@ -47,39 +64,60 @@ exports.addCategory = (req, res, next) => {
 exports.editCategory = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        cloudinary.uploader.destroy(req.file.public_id).
-            then( result => {
-                const error = new Error('Validation failed, entered data is incorrect.');
-                error.statusCode = 422;
-                next(error);
-            });
+        const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
+        error.statusCode = 422;
+        
+        if(req.file){
+            cloudinary.uploader.destroy(req.file.public_id).
+                then( result => {
+                    next(error);
+                });
+        }
+        else{
+            next(error);
+        }
     }
     else{
         const categoryId = req.params.categoryId;
-        const name = req.body.name;    
-        const image = {
-            url: req.file.url,
-            public_id: req.file.public_id
+        const name = req.body.name;
+        let image;
+
+        if(req.file){
+            image = {                
+                url: req.file.url,
+                public_id: req.file.public_id
+            }
         };
 
         let old_image_public_id;
         let editedCategory;
 
-        Category.findById(categoryId)
-            .then(category => {
-                if (!category) {
+        category.findById(categoryId)
+            .then(foundCategory => {
+                if (!foundCategory) {
                     const error = new Error('Category does not exist, or it has been deleted.');
                     error.statusCode = 404;
                     throw error;
                 }
-                old_image_public_id = category.image.public_id;
-                category.name = name;
-                category.image = image;
-                editedCategory = category;
-                return category.save();
+                if(foundCategory.name === DEFAULT_CATEGORY_NAME){
+                    const error = new Error('This category cannot be edited.');
+                    error.statusCode = 404;
+                    throw error;
+                }
+
+                if(foundCategory.image){
+                    old_image_public_id = foundCategory.image.public_id;
+                }
+
+                foundCategory.name = name;
+                foundCategory.image = image;
+                editedCategory = foundCategory;
+                return foundCategory.save();
             })
             .then(result => {
-                return cloudinary.uploader.destroy(old_image_public_id);
+                if(old_image_public_id){
+                    return cloudinary.uploader.destroy(old_image_public_id);
+                }
             })            
             .then(result => {
                 res.status(201).json({
@@ -99,22 +137,45 @@ exports.editCategory = (req, res, next) => {
 exports.deleteCategory = (req, res, next) => {
     const categoryId = req.params.categoryId;
     let image_public_id;
+    let default_category_id;
 
-    Category.findById(categoryId)
-        .then(category => {
-            if (!category) {
+    category.findOne({name: DEFAULT_CATEGORY_NAME})
+        .then(foundCategory=>{
+            default_category_id = foundCategory._id;
+            return category.findById(categoryId);
+        })    
+        .then(foundCategory => {
+            if (!foundCategory) {
                 const error = new Error('Category does not exist, or it has been deleted.');
                 error.statusCode = 404;
                 throw error;
             }
-            image_public_id = category.image.public_id;
-            return Category.findByIdAndRemove(categoryId);
+            if(foundCategory.name === DEFAULT_CATEGORY_NAME){
+                const error = new Error('This category cannot be deleted.');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            if(foundCategory.image){                
+                image_public_id = foundCategory.image.public_id;
+            }
+
+            return category.findByIdAndRemove(categoryId);
+        })
+        .then(result=>{
+            return recipe.update(
+                {"category": categoryId}, 
+                {"$set":{"category": default_category_id}}, 
+                {"multi": true}
+            );
         })
         .then(result => {
-            return cloudinary.uploader.destroy(image_public_id);
+            if(image_public_id){
+                return cloudinary.uploader.destroy(image_public_id);
+            }
         })
         .then(result => {
-            res.status(200).json({ message: 'Deleted post.' });
+            res.status(200).json({ message: 'Category deleted successfully.' });
         })
         .catch(err => {
             if (!err.statusCode) {
@@ -122,28 +183,32 @@ exports.deleteCategory = (req, res, next) => {
             }
             next(err);
         });
-  };
+};
 
 exports.getCategories = (req, res, next) => {
-    Category.find()
-    .then(categories => {
-        res.status(200).json({
-            message: 'Categories fetched successfully.',
-            categories: categories
+    category.find()
+        .then(categories => {
+            categories = categories.filter( filteredCategory => 
+                filteredCategory.name!==DEFAULT_CATEGORY_NAME
+            );
+
+            res.status(200).json({
+                message: 'Categories fetched successfully.',
+                categories: categories
+            });
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
         });
-    })
-    .catch(err => {
-        if (!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
-    });
 };
 
 exports.getCategory = (req, res, next) => {
     const categoryId = req.params.categoryId;
     
-    Recipe.find({ category: categoryId})
+    recipe.find({ category: categoryId})
         .then(recipes => {
             res.status(200).json({
                 message: 'Recipes from selected category fetched successfully.',

@@ -27,15 +27,6 @@ const userSchema = new Schema({
                 required: true
             }
         }
-    ],
-    ownedRecipes: [
-        {
-            recipeId: {
-                type: Schema.Types.ObjectId,
-                ref: 'Recipe',
-                required: true
-            }
-        }
     ]
 });
 

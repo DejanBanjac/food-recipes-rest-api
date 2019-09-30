@@ -6,12 +6,18 @@ const recipe = require('../models/recipe');
 exports.addRecipe = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        cloudinary.uploader.destroy(req.file.public_id).
-            then( result => {
-                const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
-                error.statusCode = 422;
-                next(error);
-            })
+        const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
+        error.statusCode = 422;
+        
+        if(req.file){
+            cloudinary.uploader.destroy(req.file.public_id).
+                then( result => {
+                    next(error);
+                });
+        }
+        else{
+            next(error);
+        }
     }
     else{
         const name = req.body.name;
@@ -53,12 +59,18 @@ exports.addRecipe = (req, res, next) => {
 exports.editRecipe = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        cloudinary.uploader.destroy(req.file.public_id).
-            then( result => {
-                const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
-                error.statusCode = 422;
-                next(error);
-            })
+        const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
+        error.statusCode = 422;
+        
+        if(req.file){
+            cloudinary.uploader.destroy(req.file.public_id).
+                then( result => {
+                    next(error);
+                });
+        }
+        else{
+            next(error);
+        }
     }
     else{
         const recipeId = req.params.recipeId;
@@ -83,7 +95,10 @@ exports.editRecipe = (req, res, next) => {
                     error.statusCode = 404;
                     throw error;
                 }
-                old_image_public_id = foundRecipe.image.public_id;
+
+                if(foundRecipe.image){
+                    old_image_public_id = foundRecipe.image.public_id;
+                }
 
                 foundRecipe.name = name;
                 foundRecipe.description = description;
@@ -96,7 +111,9 @@ exports.editRecipe = (req, res, next) => {
                 return foundRecipe.save();
             })
             .then(result => {
-                return cloudinary.uploader.destroy(old_image_public_id);
+                if(old_image_public_id){
+                    return cloudinary.uploader.destroy(old_image_public_id);
+                }
             })
             .then(result => {
                 res.status(201).json({
@@ -124,11 +141,17 @@ exports.deleteRecipe = (req, res, next) => {
                 error.statusCode = 404;
                 throw error;
             }
-            image_public_id = foundRecipe.image.public_id;
+
+            if(foundRecipe.image){
+                image_public_id = foundRecipe.image.public_id;
+            }
+
             return recipe.findByIdAndRemove(foundRecipe);
         })
         .then(result => {
-            return cloudinary.uploader.destroy(image_public_id);
+            if(image_public_id){
+                return cloudinary.uploader.destroy(image_public_id);
+            }
         })
         .then(result => {
             res.status(200).json({ message: 'Recipe deleted successfully!' });
