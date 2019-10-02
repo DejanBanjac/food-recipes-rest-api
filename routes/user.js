@@ -42,10 +42,15 @@ router.post(
     userController.signup
 );
 
-router.post('/login', userController.login);
+router.post(
+    '/login',
+    body('email')
+        .normalizeEmail(),
+    userController.login
+);
 
 router.get(
-    '/addFavouriteRecipe/:recipeId', 
+    '/add-recipe-to-favorites/:recipeId', 
     isAuthorized, 
     userController.addFavouriteRecipe
 );

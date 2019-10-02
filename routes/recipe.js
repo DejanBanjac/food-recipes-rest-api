@@ -14,10 +14,6 @@ const MIN_RECIPE_NAME_LENGHT = 3;
 router.post(
     '/add-recipe',
     parser.single('image'),
-    (req, res, next) => {
-        console.log(req.body);
-        next();
-    },
     [
         body('name')
             .isString()

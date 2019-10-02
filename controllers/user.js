@@ -2,7 +2,7 @@ const { validationResult } = require('express-validator/check');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const User = require('../models/user');
+const user = require('../models/user');
 
 const HASH_ROUNDS = 12;
 const LOGIN_FAIL_MESSAGE = "Wrong password or user name";
@@ -47,15 +47,15 @@ exports.login = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     let loadedUser;
-    User.findOne({ email: email })
-        .then(user => {
-            if (!user) {
+    user.findOne({ email: email })
+        .then(foundUser => {
+            if (!foundUser) {
                 const error = new Error(LOGIN_FAIL_MESSAGE);
                 error.statusCode = 401;
                 throw error;
             }
-            loadedUser = user;
-            return bcrypt.compare(password, user.password);
+            loadedUser = foundUser;
+            return bcrypt.compare(password, foundUser.password);
         })
         .then(isEqual => {
             if (!isEqual) {
@@ -83,14 +83,14 @@ exports.login = (req, res, next) => {
 
 exports.addFavouriteRecipe = (req, res, next) => {
     const recipeId = req.params.recipeId;
-    const userId = req.userId
+    const userId = req.userId;
 
-    User.findById(userId)
-        .then( user => {
-            if(!user){
+    user.findById(userId)
+        .then( foundUser => {
+            if(!foundUser){
                 throw new error("Server is bussy at the moment. Please try again later.");
             }
-            return user.addRecipeToFavorites(recipeId);
+            return foundUser.addRecipeToFavorites(recipeId);
         })
         .then(result => {
             res.status(200).json({
