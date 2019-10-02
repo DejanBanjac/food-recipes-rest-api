@@ -34,6 +34,12 @@ app.use('/user', multer().none(), userRoutes);
 app.use('/category', categoryRoutes);
 app.use('/recipe', recipeRoutes);
 
+app.use((req, res, next)=>{
+    const error = new Error('Resource not found...');
+    error.statusCode = 404;
+    next(error);
+});
+
 app.use((error, req, res, next) => {
     console.log(error);
     const status = error.statusCode || 500;
