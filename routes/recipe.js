@@ -14,12 +14,16 @@ const MIN_RECIPE_NAME_LENGHT = 3;
 router.post(
     '/add-recipe',
     parser.single('image'),
+    (req, res, next) => {
+        console.log(req.body);
+        next();
+    },
     [
         body('name')
             .isString()
             .trim()
             .isLength({ min: MIN_RECIPE_NAME_LENGHT })
-            .withMessage('Name must be at least', MIN_RECIPE_NAME_LENGHT, ' characters long.')
+            .withMessage('Name must be at least' + MIN_RECIPE_NAME_LENGHT + ' characters long.')
             .custom((value, { req }) => {
                 return recipe.findOne({ name: value })
                     .then(foundRecipe => {

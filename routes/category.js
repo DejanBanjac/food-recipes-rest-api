@@ -18,7 +18,7 @@ router.post(
             .isString()
             .trim()
             .isLength({ min: MIN_CATEGORY_NAME_LENGHT })
-            .withMessage('Name must be at least', MIN_CATEGORY_NAME_LENGHT, ' characters long.')
+            .withMessage('Name must be at least' + MIN_CATEGORY_NAME_LENGHT + ' characters long.')
             .custom((value, { req }) => {
                 return category.findOne({ name: value })
                     .then(foundRecipe => {
