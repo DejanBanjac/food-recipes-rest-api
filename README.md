@@ -7,8 +7,9 @@ Application utilises NoSQL MongoDB services for persisting data, and Claudinary 
 
 Suported resources are user, recipe and category.
 
+
 User endpoints:
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+
 POST /user/signup - registers a new user. Body of request should consist of following parameters:
     - email (required): email of new user.
     - password (required): password for new user.
@@ -19,8 +20,9 @@ POST /user/login - logs in the user. Body of request should consist of following
     - password (required): password for user.
 GET /user//add-recipe-to-favorites/{recipeId} - adds the selected recipe to logged in user's favorite recipes. URL parameter represent the id of favourited recipe.
 
+
 Recipe endpoints:
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+
 POST /recipe/add-recipe - creates a new recipe. Body of request consist of fields for new recipe:
     - name (required): name of new recipe. Should be unique.
     - description (required): a description how to prepare the recipe.
@@ -43,8 +45,9 @@ DELETE /recipe/delete-recipe/{recipeId} - deletes the selected recipe. Url param
 GET /recipe/get-recipes - gets all existing recipes from the database.
 GET /recipe/get-recipe/{recipeId} - gets data for selected recipe. Url parameter represents the selected recipe's id.
 
+
 Category endpoints:
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+
 POST /category/add-category - adds a new category. Body of request should consist of following parameters:
     - name (required): a name of new category.
     - image: image file that will be uploaded.
@@ -62,7 +65,7 @@ MONGODB_CONNECTION_STRING (string for connecting to MongoDB services)
 NODE_ENV (should be set to development or production)
 PORT (chose at which port server will accept requests)
 JWT_SEED (should be a long secret random string)
-CLOUDINARY_URL
+CLOUDINARY_URL (string for connecting to claudinary services)
 CLOUDINARY_CLOUD_NAME
 CLOUDINARY_API_KEY
 CLOUDINARY_API_SECRET
