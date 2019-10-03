@@ -65,9 +65,6 @@ MONGODB_CONNECTION_STRING (string for connecting to MongoDB services)
 NODE_ENV (should be set to development or production)
 PORT (chose at which port server will accept requests)
 JWT_SEED (should be a long secret random string)
-CLOUDINARY_URL (string for connecting to claudinary services)
-CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET
+CLOUDINARY_URL (string for connecting to cloudinary services)
 
 They can be kept in .env file, when running application in development mode.
