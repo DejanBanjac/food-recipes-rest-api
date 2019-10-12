@@ -10,44 +10,51 @@ const LOGIN_FAIL_MESSAGE = "Wrong password or user name";
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
+        const error = new Error(
+            'Validation has failed:' 
+            + errors.array().map(error => '\n' + error.msg)
+        );
         error.statusCode = 422;
         
-        next(error);
+        return next(error);
     }
-    else{
-        const email = req.body.email;
-        const password = req.body.password;
-        const firstName = req.body.firstName;
-        const lastName = req.body.lastName;
-        bcrypt
-            .hash(password, HASH_ROUNDS)
-            .then(hashedPw => {
-                const user = new User({
+    
+    const email = req.body.email;
+    const password = req.body.password;
+    const firstName = req.body.firstName;
+    const lastName = req.body.lastName;
+
+    return bcrypt
+        .hash(password, HASH_ROUNDS)
+        .then(hashedPw => {
+            const newUser = new user({
                 email: email,
                 password: hashedPw,
                 firstName: firstName,
                 lastName :lastName
-                });
-                return user.save();
-            })
-            .then(result => {
-                res.status(201).json({ message: 'User created!', userId: result._id });
-            })
-            .catch(err => {
-                if (!err.statusCode) {
-                err.statusCode = 500;
-                }
-                next(err);
             });
-    }
+            return newUser.save();
+        })
+        .then(result => {
+            return res.status(201).json({ 
+                message: 'User created!', 
+                userId: result._id 
+            });
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+            err.statusCode = 500;
+            }
+            return next(err);
+        });
 };
 
 exports.login = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     let loadedUser;
-    user.findOne({ email: email })
+
+    return user.findOne({ email: email })
         .then(foundUser => {
             if (!foundUser) {
                 const error = new Error(LOGIN_FAIL_MESSAGE);
@@ -71,13 +78,16 @@ exports.login = (req, res, next) => {
                 process.env.JWT_SEED,
                 { expiresIn: '1h' }
             );
-            res.status(200).json({ token: token, userId: loadedUser._id.toString() });
+            return res.status(200).json({ 
+                token: token, 
+                userId: loadedUser._id.toString()
+            });
         })
         .catch(err => {
             if (!err.statusCode) {
                 err.statusCode = 500;
             }
-            next(err);
+            return next(err);
         });
 };
 
@@ -85,7 +95,7 @@ exports.addFavouriteRecipe = (req, res, next) => {
     const recipeId = req.params.recipeId;
     const userId = req.userId;
 
-    user.findById(userId)
+    return user.findById(userId)
         .then( foundUser => {
             if(!foundUser){
                 throw new error("Server is bussy at the moment. Please try again later.");
@@ -93,13 +103,13 @@ exports.addFavouriteRecipe = (req, res, next) => {
             return foundUser.addRecipeToFavorites(recipeId);
         })
         .then(result => {
-            res.status(200).json({
+            return res.status(200).json({
                 message: "Recipe successfully added to favourites!" 
             });
         })
         .catch(err => {
             const error = new Error(err);
             error.httpStatusCode = 500;
-            next(error);
+            return next(error);
         })
 };
