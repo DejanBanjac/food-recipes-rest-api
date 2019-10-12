@@ -90,8 +90,8 @@ exports.editCategory = (req, res, next) => {
         image = {                
             url: req.file.url,
             public_id: req.file.public_id
-        }
-    };
+        };
+    }
 
     let old_image_public_id;
     let editedCategory;
