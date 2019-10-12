@@ -9,129 +9,132 @@ const DEFAULT_CATEGORY_NAME = 'Uncategorized';
 exports.addCategory = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
+        const error = new Error(
+            'Validation has failed:' 
+            + errors.array().map(error => '\n' + error.msg)
+        );
         error.statusCode = 422;
         
         if(req.file){
-            cloudinary.uploader.destroy(req.file.public_id).
+            return cloudinary.uploader.destroy(req.file.public_id).
                 then( result => {
-                    next(error);
+                    return next(error);
                 });
         }
         else{
-            next(error);
+            return next(error);
         }
+    }
+    
+    const name = req.body.name;
+    let newCategory;
+
+    if(req.file){
+        const image = {
+            url: req.file.url,
+            public_id: req.file.public_id
+        };
+    
+        newCategory = new category({
+            name: name,
+            image: image
+        });
     }
     else{
-        const name = req.body.name;
-    
-        let newCategory;
-
-        if(req.file){
-            const image = {
-                url: req.file.url,
-                public_id: req.file.public_id
-            };
-        
-            newCategory = new category({
-                name: name,
-                image: image
-            });
-        }
-        else{
-            newCategory = new category({
-                name: name
-            });
-        }
-    
-        newCategory
-            .save()
-            .then(result => {
-                res.status(201).json({
-                    message: 'Category created successfully!',
-                    category: newCategory
-                });
-            })
-            .catch(err => {
-                if (!err.statusCode) {
-                    err.statusCode = 500;
-                }
-                next(err);
-            });
+        newCategory = new category({
+            name: name
+        });
     }
+
+    return newCategory
+        .save()
+        .then(result => {
+            return res.status(201).json({
+                message: 'Category created successfully!',
+                category: result
+            });
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            return next(err);
+        });
 };
 
 exports.editCategory = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        const error = new Error('Validation has failed:' + errors.array().map(error => '\n' + error.msg));
+        const error = new Error(
+            'Validation has failed:' 
+            + errors.array().map(error => '\n' + error.msg)
+        );
         error.statusCode = 422;
         
         if(req.file){
-            cloudinary.uploader.destroy(req.file.public_id).
+            return cloudinary.uploader.destroy(req.file.public_id).
                 then( result => {
-                    next(error);
+                    return next(error);
                 });
         }
         else{
-            next(error);
+            return next(error);
         }
     }
-    else{
-        const categoryId = req.params.categoryId;
-        const name = req.body.name;
-        let image;
 
-        if(req.file){
-            image = {                
-                url: req.file.url,
-                public_id: req.file.public_id
+    const categoryId = req.params.categoryId;
+    const name = req.body.name;
+    let image;
+
+    if(req.file){
+        image = {                
+            url: req.file.url,
+            public_id: req.file.public_id
+        }
+    };
+
+    let old_image_public_id;
+    let editedCategory;
+
+    return category.findById(categoryId)
+        .then(foundCategory => {
+            if (!foundCategory) {
+                const error = new Error('Category does not exist, or it has been deleted.');
+                error.statusCode = 404;
+                throw error;
             }
-        };
+            if(foundCategory.name === DEFAULT_CATEGORY_NAME){
+                const error = new Error('This category cannot be edited.');
+                error.statusCode = 404;
+                throw error;
+            }
 
-        let old_image_public_id;
-        let editedCategory;
+            if(foundCategory.image){
+                old_image_public_id = foundCategory.image.public_id;
+            }
 
-        category.findById(categoryId)
-            .then(foundCategory => {
-                if (!foundCategory) {
-                    const error = new Error('Category does not exist, or it has been deleted.');
-                    error.statusCode = 404;
-                    throw error;
-                }
-                if(foundCategory.name === DEFAULT_CATEGORY_NAME){
-                    const error = new Error('This category cannot be edited.');
-                    error.statusCode = 404;
-                    throw error;
-                }
-
-                if(foundCategory.image){
-                    old_image_public_id = foundCategory.image.public_id;
-                }
-
-                foundCategory.name = name;
-                foundCategory.image = image;
-                editedCategory = foundCategory;
-                return foundCategory.save();
-            })
-            .then(result => {
-                if(old_image_public_id){
-                    return cloudinary.uploader.destroy(old_image_public_id);
-                }
-            })            
-            .then(result => {
-                res.status(201).json({
-                    message: 'Category updated successfully!',
-                    category: editedCategory
-                });
-            })
-            .catch(err => {
-                if (!err.statusCode) {
-                    err.statusCode = 500;
-                }
-                next(err);
+            foundCategory.name = name;
+            foundCategory.image = image;
+            editedCategory = foundCategory;
+            return foundCategory.save();
+        })
+        .then(result => {
+            if(old_image_public_id){
+                return cloudinary.uploader.destroy(old_image_public_id);
+            }
+        })            
+        .then(result => {
+            return res.status(201).json({
+                message: 'Category updated successfully!',
+                category: editedCategory
             });
-    }
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            return next(err);
+        });
 };
 
 exports.deleteCategory = (req, res, next) => {
@@ -139,7 +142,7 @@ exports.deleteCategory = (req, res, next) => {
     let image_public_id;
     let default_category_id;
 
-    category.findOne({name: DEFAULT_CATEGORY_NAME})
+    return category.findOne({name: DEFAULT_CATEGORY_NAME})
         .then(foundCategory=>{
             default_category_id = foundCategory._id;
             return category.findById(categoryId);
@@ -175,24 +178,24 @@ exports.deleteCategory = (req, res, next) => {
             }
         })
         .then(result => {
-            res.status(200).json({ message: 'Category deleted successfully.' });
+            return res.status(200).json({ message: 'Category deleted successfully.' });
         })
         .catch(err => {
             if (!err.statusCode) {
                 err.statusCode = 500;
             }
-            next(err);
+            return next(err);
         });
 };
 
 exports.getCategories = (req, res, next) => {
-    category.find()
+    return category.find()
         .then(categories => {
             categories = categories.filter( filteredCategory => 
                 filteredCategory.name!==DEFAULT_CATEGORY_NAME
             );
 
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'Categories fetched successfully.',
                 categories: categories
             });
@@ -201,16 +204,16 @@ exports.getCategories = (req, res, next) => {
             if (!err.statusCode) {
                 err.statusCode = 500;
             }
-            next(err);
+            return next(err);
         });
 };
 
 exports.getCategory = (req, res, next) => {
     const categoryId = req.params.categoryId;
     
-    recipe.find({ category: categoryId})
+    return recipe.find({ category: categoryId})
         .then(recipes => {
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'Recipes from selected category fetched successfully.',
                 recipes: recipes
             });
@@ -219,6 +222,6 @@ exports.getCategory = (req, res, next) => {
             if (!err.statusCode) {
                 err.statusCode = 500;
             }
-            next(err);
+            return next(err);
         });
 };
