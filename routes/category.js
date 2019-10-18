@@ -8,7 +8,13 @@ const category = require('../models/category');
 
 const router = express.Router();
 
-const MIN_CATEGORY_NAME_LENGHT = 3;
+const MIN_CATEGORY_NAME_LENGTH = 3;
+
+const MIN_CATEGORY_NAME_LENGTH_MESSAGE = 
+    'Name must be at least' 
+    + MIN_CATEGORY_NAME_LENGTH 
+    + ' characters long.';
+const NAME_ALREADY_RESERVED = 'Category with the same name already exists!';
 
 router.post(
     '/add-category',
@@ -17,13 +23,13 @@ router.post(
         body('name')
             .isString()
             .trim()
-            .isLength({ min: MIN_CATEGORY_NAME_LENGHT })
-            .withMessage('Name must be at least' + MIN_CATEGORY_NAME_LENGHT + ' characters long.')
+            .isLength({ min: MIN_CATEGORY_NAME_LENGTH })
+            .withMessage(MIN_CATEGORY_NAME_LENGTH_MESSAGE)
             .custom((value, { req }) => {
                 return category.findOne({ name: value })
                     .then(foundRecipe => {
                         if (foundRecipe) {
-                            return Promise.reject('Category with the same name already exists!');
+                            return Promise.reject(NAME_ALREADY_RESERVED);
                         }
                 });
             }),
@@ -38,13 +44,13 @@ router.put(
         body('name')
             .isString()
             .trim()
-            .isLength({ min: MIN_CATEGORY_NAME_LENGHT })
-            .withMessage('Name must be at least', MIN_CATEGORY_NAME_LENGHT, ' characters long.')
+            .isLength({ min: MIN_CATEGORY_NAME_LENGTH })
+            .withMessage(MIN_CATEGORY_NAME_LENGTH_MESSAGE)
             .custom((value, { req }) => {
                 return category.findOne({ name: value })
                     .then(foundRecipe => {
                         if (foundRecipe) {
-                            return Promise.reject('Category with the same name already exists!');
+                            return Promise.reject(NAME_ALREADY_RESERVED);
                         }
                 });
             }),
