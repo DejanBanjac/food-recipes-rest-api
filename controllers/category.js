@@ -113,11 +113,6 @@ exports.editCategory = (req, res, next) => {
                 error.statusCode = 404;
                 throw error;
             }
-            if(foundCategory.name === DEFAULT_CATEGORY_NAME){
-                const error = new Error(CATEGORY_CANNOT_BE_EDITED_MESSAGE);
-                error.statusCode = 404;
-                throw error;
-            }
 
             if(foundCategory.image){
                 old_image_public_id = foundCategory.image.public_id;
@@ -152,30 +147,25 @@ exports.deleteCategory = (req, res, next) => {
     let image_public_id;
     let default_category_id;
 
-    return category.findOne({name: DEFAULT_CATEGORY_NAME})
-        .then(foundCategory=>{
+    return category.getDefaultCategory()
+        .then(foundCategory => {
             default_category_id = foundCategory._id;
             return category.findById(categoryId);
-        })    
+        })
         .then(foundCategory => {
             if (!foundCategory) {
                 const error = new Error(CATEGORY_NOT_FOUND_MESSAGE);
                 error.statusCode = 404;
                 throw error;
             }
-            if(foundCategory.name === DEFAULT_CATEGORY_NAME){
-                const error = new Error(CATEGORY_CANNOT_BE_DELETED_MESSAGE);
-                error.statusCode = 404;
-                throw error;
-            }
-
+            
             if(foundCategory.image){                
                 image_public_id = foundCategory.image.public_id;
             }
 
             return category.findByIdAndRemove(categoryId);
         })
-        .then(result=>{
+        .then(result => {
             return recipe.update(
                 {"category": categoryId}, 
                 {"$set":{"category": default_category_id}}, 
@@ -201,10 +191,6 @@ exports.deleteCategory = (req, res, next) => {
 exports.getCategories = (req, res, next) => {
     return category.find()
         .then(categories => {
-            categories = categories.filter( filteredCategory => 
-                filteredCategory.name!==DEFAULT_CATEGORY_NAME
-            );
-
             return res.status(200).json({
                 message: CATEGORIES_FETCHED_MESSAGE,
                 categories: categories
@@ -220,11 +206,22 @@ exports.getCategories = (req, res, next) => {
 
 exports.getCategory = (req, res, next) => {
     const categoryId = req.params.categoryId;
+    let chosenCategory;
     
-    return recipe.find({ category: categoryId})
+    return category.findById(categoryId)
+        .then(foundCategory =>{
+            if (!foundCategory) {
+                const error = new Error(CATEGORY_NOT_FOUND_MESSAGE);
+                error.statusCode = 404;
+                throw error;
+            }
+            chosenCategory = foundCategory;
+            return recipe.find({ category: categoryId}, '_id name')
+        })
         .then(recipes => {
             return res.status(200).json({
                 message: CATEGORY_FETCHED_MESSAGE,
+                category: chosenCategory,
                 recipes: recipes
             });
         })
