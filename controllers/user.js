@@ -5,13 +5,18 @@ const jwt = require('jsonwebtoken');
 const user = require('../models/user');
 
 const HASH_ROUNDS = 12;
-const LOGIN_FAIL_MESSAGE = "Wrong password or user name";
+
+const LOGIN_FAIL_MESSAGE = 'Wrong password or user name';
+const VALIDATION_HAS_FAILED_MESSAGE = 'Validation has failed:';
+const USER_CREATED_MESSAGE = 'User created successfully!';
+const USER_NOT_FOUND_MESSAGE = 'User cannot be found.';
+const RECIPE_FAVOURED_MESSAGE = 'Recipe successfully added to favourites!';
 
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const error = new Error(
-            'Validation has failed:' 
+            VALIDATION_HAS_FAILED_MESSAGE 
             + errors.array().map(error => '\n' + error.msg)
         );
         error.statusCode = 422;
@@ -37,7 +42,7 @@ exports.signup = (req, res, next) => {
         })
         .then(result => {
             return res.status(201).json({ 
-                message: 'User created!', 
+                message: USER_CREATED_MESSAGE, 
                 userId: result._id 
             });
         })
@@ -98,13 +103,13 @@ exports.addFavouriteRecipe = (req, res, next) => {
     return user.findById(userId)
         .then( foundUser => {
             if(!foundUser){
-                throw new error("Server is bussy at the moment. Please try again later.");
+                throw new error(USER_NOT_FOUND_MESSAGE);
             }
             return foundUser.addRecipeToFavorites(recipeId);
         })
         .then(result => {
             return res.status(200).json({
-                message: "Recipe successfully added to favourites!" 
+                message: RECIPE_FAVOURED_MESSAGE
             });
         })
         .catch(err => {

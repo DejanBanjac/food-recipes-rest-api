@@ -3,11 +3,19 @@ const cloudinary = require('cloudinary').v2;
 
 const recipe = require('../models/recipe');
 
+const VALIDATION_HAS_FAILED_MESSAGE = 'Validation has failed:';
+const RECIPE_CREATED_MESSAGE = 'Recipe created successfully!';
+const RECIPE_NOT_FOUND_MESSAGE = 'Recipe does not exist, or it has been deleted.';
+const RECIPE_UPDATED_MESSAGE = 'Recipe updated successfully!';
+const RECIPE_DELETED_MESSAGE = 'Recipe deleted successfully!';
+const RECIPES_FETCHED_MESSAGE = 'Recipes fetched successfully.';
+const RECIPE_FETCHED_MESSAGE = 'Recipe fetched successfully.';
+
 exports.addRecipe = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const error = new Error(
-            'Validation has failed:' 
+            VALIDATION_HAS_FAILED_MESSAGE 
             + errors.array().map(error => '\n' + error.msg)
         );
         error.statusCode = 422;
@@ -55,7 +63,7 @@ exports.addRecipe = (req, res, next) => {
         })
         .then(populatedRecipe => {
             return res.status(201).json({
-                message: 'Recipe created successfully!',
+                message: RECIPE_CREATED_MESSAGE,
                 recipe: populatedRecipe
             });
         })
@@ -71,7 +79,7 @@ exports.editRecipe = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const error = new Error(
-            'Validation has failed:' 
+            VALIDATION_HAS_FAILED_MESSAGE 
             + errors.array().map(error => '\n' + error.msg)
         );
         error.statusCode = 422;
@@ -105,7 +113,7 @@ exports.editRecipe = (req, res, next) => {
     return recipe.findById(recipeId)
         .then(foundRecipe => {
             if (!foundRecipe) {
-                const error = new Error('Recipe does not exist, or it has been deleted.');
+                const error = new Error(RECIPE_NOT_FOUND_MESSAGE);
                 error.statusCode = 404;
                 throw error;
             }
@@ -131,7 +139,7 @@ exports.editRecipe = (req, res, next) => {
         })
         .then(result => {
             return res.status(201).json({
-                message: 'Recipe updated successfully!',
+                message: RECIPE_UPDATED_MESSAGE,
                 recipe: editedRecipe
             });
         })
@@ -150,7 +158,7 @@ exports.deleteRecipe = (req, res, next) => {
     return recipe.findById(recipeId)
         .then(foundRecipe => {
             if (!foundRecipe) {
-                const error = new Error('Recipe does not exist, or it has been deleted.');
+                const error = new Error(RECIPE_NOT_FOUND_MESSAGE);
                 error.statusCode = 404;
                 throw error;
             }
@@ -167,7 +175,7 @@ exports.deleteRecipe = (req, res, next) => {
             }
         })
         .then(result => {
-            return res.status(200).json({ message: 'Recipe deleted successfully!' });
+            return res.status(200).json({ message: RECIPE_DELETED_MESSAGE });
         })
         .catch(err => {
             if (!err.statusCode) {
@@ -182,7 +190,7 @@ exports.getRecipes = (req, res, next) => {
         .populate('category', '_id name image')
         .then(foundRecipes => {
             return res.status(200).json({
-                message: 'Recipes fetched successfully.',
+                message: RECIPES_FETCHED_MESSAGE,
                 recipes: foundRecipes
             });
         })
@@ -201,7 +209,7 @@ exports.getRecipe = (req, res, next) => {
         .populate('category', '_id name image')
         .then(recipe => {
             return res.status(200).json({
-                message: 'Recipe fetched successfully.',
+                message: RECIPE_FETCHED_MESSAGE,
                 recipe: recipe
             });
         })
