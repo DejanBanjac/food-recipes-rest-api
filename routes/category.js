@@ -26,9 +26,9 @@ router.post(
             .isLength({ min: MIN_CATEGORY_NAME_LENGTH })
             .withMessage(MIN_CATEGORY_NAME_LENGTH_MESSAGE)
             .custom((value, { req }) => {
-                return category.findOne({ name: value })
-                    .then(foundRecipe => {
-                        if (foundRecipe) {
+                return category.count({ name: value })
+                    .then(count => {
+                        if (count>0) {
                             return Promise.reject(NAME_ALREADY_RESERVED);
                         }
                 });
@@ -47,9 +47,12 @@ router.put(
             .isLength({ min: MIN_CATEGORY_NAME_LENGTH })
             .withMessage(MIN_CATEGORY_NAME_LENGTH_MESSAGE)
             .custom((value, { req }) => {
-                return category.findOne({ name: value })
-                    .then(foundRecipe => {
-                        if (foundRecipe) {
+                return category.count({ 
+                    name: value,
+                    _id: {$ne: req.params.categoryId}
+                })
+                .then(count => {
+                    if (count>0) {
                             return Promise.reject(NAME_ALREADY_RESERVED);
                         }
                 });

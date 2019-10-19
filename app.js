@@ -12,6 +12,10 @@ const userRoutes = require('./routes/user');
 const categoryRoutes = require('./routes/category');
 const recipeRoutes = require('./routes/recipe');
 
+const DEFAULT_PORT = 3000;
+
+const RESOURCE_NOT_FOUND_MESSAGE = 'Resource not found...';
+
 const app = express();
 
 app.use((req, res, next) => {
@@ -35,7 +39,7 @@ app.use('/category', categoryRoutes);
 app.use('/recipe', recipeRoutes);
 
 app.use((req, res, next)=>{
-    const error = new Error('Resource not found...');
+    const error = new Error(RESOURCE_NOT_FOUND_MESSAGE);
     error.statusCode = 404;
     next(error);
 });
@@ -51,7 +55,7 @@ app.use((error, req, res, next) => {
 mongoose
     .connect(process.env.MONGODB_CONNECTION_STRING)
     .then(result => {
-        app.listen(process.env.PORT || 3000);
+        app.listen(process.env.PORT || DEFAULT_PORT);
     })
     .catch(err => {
         console.log(err);

@@ -31,12 +31,12 @@ router.post(
             .isLength({ min: MIN_RECIPE_NAME_LENGHT })
             .withMessage(MIN_RECIPE_NAME_LENGTH_MESSAGE)
             .custom((value, { req }) => {
-                return recipe.findOne({ name: value })
-                    .then(foundRecipe => {
-                        if (foundRecipe) {
-                            return Promise.reject(NAME_ALREADY_RESERVED);
-                        }
-                });
+                return recipe.count({ name: value })
+                    .then(count => {
+                        if (count>0) {
+                                return Promise.reject(NAME_ALREADY_RESERVED);
+                            }
+                    });
             }),
         body('description')
             .exists()
@@ -45,9 +45,9 @@ router.post(
             .exists()
             .withMessage(CATEGORY_MISSING)
             .custom((value, { req }) => {
-                return category.findById(value)
-                    .then(foundCategory => {
-                        if (!foundCategory) {
+                return category.count({ _id: value })
+                    .then(count => {
+                        if (count<1) {
                             return Promise.reject(CATEGORY_MISSING_FROM_DB);
                         }
                 });
@@ -69,9 +69,12 @@ router.put(
             .isLength({ min: MIN_RECIPE_NAME_LENGHT })
             .withMessage(MIN_RECIPE_NAME_LENGTH_MESSAGE)
             .custom((value, { req }) => {
-                return recipe.findOne({ name: value })
-                    .then(foundRecipe => {
-                        if (foundRecipe) {
+                return recipe.count({ 
+                        name: value,
+                        _id: {$ne: req.params.recipeId}
+                    })
+                    .then(count => {
+                        if (count>0) {
                             return Promise.reject(NAME_ALREADY_RESERVED);
                         }
                 });
@@ -83,9 +86,9 @@ router.put(
             .exists()
             .withMessage(CATEGORY_MISSING)
             .custom((value, { req }) => {
-                return category.findById(value)
-                    .then(foundCategory => {
-                        if (!foundCategory) {
+                return category.count({ _id: value })
+                    .then(count => {
+                        if (count<1) {
                             return Promise.reject(CATEGORY_MISSING_FROM_DB);
                         }
                 });

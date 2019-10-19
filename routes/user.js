@@ -26,9 +26,9 @@ router.post(
             .withMessage(INVALID_EMAIL_MESSAGE)
             .normalizeEmail()
             .custom((value, { req }) => {
-                return user.findOne({ email: value })
-                    .then(userDoc => {
-                        if (userDoc) {
+                return user.count({ email: value })
+                    .then(count => {
+                        if (count>0) {
                             return Promise.reject(EMAIL_ALREADY_EXISTS_MESSAGE);
                         }
                     });
